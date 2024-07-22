@@ -247,12 +247,13 @@ custom_log($import_process_option );
 					'post_excerpt' => $post['post_excerpt'],
 					'post_content' => $post['post_content'],
 				);
-
 				// Update the course
-				return wp_update_post( $update_course );
+				wp_update_post( $update_course );
+
+				return array( 'status' => 'updated', 'post_id' => $course_id );
 			}
 
-			return $course_id;
+			return array( 'status' => 'skipped', 'post_id' => $course_id );
 		}
 		$insert = array(
 			'ID'           => '',
@@ -262,10 +263,15 @@ custom_log($import_process_option );
 			'post_excerpt' => $post['post_excerpt'],
 			'post_content' => $post['post_content'],
 		);
-
 		// Create a new course
-		return wp_insert_post( $insert );
+		$inserted_post_id = wp_insert_post( $insert );
+		if ( ! is_wp_error( $inserted_post_id ) ) {
+			return array( 'status' => 'created', 'post_id' => $inserted_post_id );
+		}
+
+		return array( 'status' => 'error', 'post_id' => 0 );
 	}
+
 
     public function is_serial($string) {
         return (@unserialize($string) !== false);
