@@ -1,0 +1,40 @@
+.stm-cie-export-notice i {
+    color: #00a32a;
+    margin-left: 10px;
+    animation:spin 3s linear infinite;
+}
+.stm-cie-import-spinner i {
+    color: #000;
+    margin-left: 10px;
+    animation:spin 3s linear infinite;
+}
+@keyframes spin {
+    50% { -webkit-transform: rotateY(90deg); transform:rotateY(90deg); }
+}
+
+.stm-cie-import-container {
+    max-width: 1000px;
+}
+
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 999px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    background: red;
+    cursor: inherit;
+    display: block;
+}
+input[readonly] {
+    background-color: white !important;
+    cursor: text !important;
+}
