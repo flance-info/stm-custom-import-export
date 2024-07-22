@@ -115,8 +115,6 @@ class STM_CIE_Import_Manage
     }
 
 	public function item_handler( $item = [] ) {
-
-
 		if ( ! isset( $item['type'] ) || empty( $item['type'] ) ) {
 			return;
 		}
@@ -124,17 +122,13 @@ class STM_CIE_Import_Manage
 		$import_process_option = get_option( 'stm_cie_import_process_option', $this->statuses_default );
 		$import_materials      = get_option( 'stm_cie_import_materials', [] );
 		$type = $item['type'];
+		$insert_result = $this->import_post( $item );
 		$is_skipped = false;
 		$is_created = false;
-		if ( $item['skip_for_names'] && ! empty( $item['post_title'] ) ) {
-			$exist_id = $wpdb->get_var( "SELECT ID FROM $wpdb->posts WHERE post_title = '" . $item['post_title'] . "'" );
-			if ( $exist_id ) {
-				$is_skipped = true;
-			}
-		}
-		$inserted_post_id = $this->import_post( $item );
-		if ( ! is_wp_error( $inserted_post_id ) ) {
+		$is_updated = false;
+		if ( $insert_result['status'] == 'created' ) {
 			$old_id                      = $item['ID'];
+			$inserted_post_id            = $insert_result['post_id'];
 			$this->materials[ $old_id ]  = $inserted_post_id;
 			$import_materials[ $old_id ] = $inserted_post_id;
 			if ( isset( $item['meta'] ) && ! empty( $item['meta'] ) ) {
@@ -162,6 +156,8 @@ class STM_CIE_Import_Manage
 				}
 				update_post_meta( $inserted_post_id, 'stm_lms_bundle_ids', $new_ids );
 			}
+		} elseif ( $insert_result['status'] == 'updated' ) {
+			$is_updated = true;
 		} else {
 			$is_skipped = true;
 		}
@@ -171,10 +167,14 @@ class STM_CIE_Import_Manage
 		if ( $is_created ) {
 			$import_process_option['created'][ $type ] ++;
 		}
+		if ( $is_updated ) {
+			$import_process_option['updated'][ $type ] ++;
+		}
 		custom_log( $import_process_option );
 		update_option( 'stm_cie_import_process_option', $import_process_option );
 		update_option( 'stm_cie_import_materials', $import_materials );
 	}
+
 
     public function import_handler($data = [], $args = [])
     {
