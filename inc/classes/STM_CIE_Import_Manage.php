@@ -185,7 +185,7 @@ class STM_CIE_Import_Manage
         if($is_created) {
             $import_process_option['created'][$type]++;
         }
-
+custom_log($import_process_option );
         update_option( 'stm_cie_import_process_option', $import_process_option );
         update_option('stm_cie_import_materials', $import_materials);
     }
@@ -233,40 +233,39 @@ class STM_CIE_Import_Manage
 
     }
 
-    public function import_post($post = [])
-    {
-        global $wpdb;
-        // Query the database to find if there's any course with the same title and post type
-        $course_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT ID FROM $wpdb->posts WHERE post_title = %s AND post_type = %s AND post_status != 'trash'",
-            $post['post_title'], $post['post_type']
-        ));
+	public function import_post( $post = [] ) {
+		global $wpdb;
+		// Query the database to find if there's any course with the same title and post type
+		$course_id = $wpdb->get_var( $wpdb->prepare(
+			"SELECT ID FROM $wpdb->posts WHERE post_title = %s AND post_type = %s AND post_status != 'trash'",
+			$post['post_title'], $post['post_type']
+		) );
+		if ( $course_id ) {
+			if ( ! $post['skip_for_names'] ) {
+				$update_course = array(
+					'ID'           => $course_id,
+					'post_excerpt' => $post['post_excerpt'],
+					'post_content' => $post['post_content'],
+				);
 
-        if ( $course_id ) {
-            if ( ! $post['skip_for_names'] ) {
-                $update_course = array(
-                    'ID' => $course_id,
-                    'post_excerpt' => $post['post_excerpt'],
-                    'post_content' => $post['post_content'],
-                );
-                // Update the course
-                return wp_update_post( $update_course );
-            }
+				// Update the course
+				return wp_update_post( $update_course );
+			}
 
-            return $course_id;
-        }
+			return $course_id;
+		}
+		$insert = array(
+			'ID'           => '',
+			'post_title'   => $post['post_title'],
+			'post_type'    => $post['post_type'],
+			'post_status'  => $post['post_status'],
+			'post_excerpt' => $post['post_excerpt'],
+			'post_content' => $post['post_content'],
+		);
 
-        $insert = array(
-            'ID' => '',
-            'post_title' => $post['post_title'],
-            'post_type' => $post['post_type'],
-            'post_status' => $post['post_status'],
-            'post_excerpt' => $post['post_excerpt'],
-            'post_content' => $post['post_content'],
-        );
-        // Create a new course
-        return wp_insert_post( $insert );
-    }
+		// Create a new course
+		return wp_insert_post( $insert );
+	}
 
     public function is_serial($string) {
         return (@unserialize($string) !== false);
