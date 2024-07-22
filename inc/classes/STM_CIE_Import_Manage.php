@@ -168,9 +168,9 @@ class STM_CIE_Import_Manage
 			$import_process_option['created'][ $type ] ++;
 		}
 		if ( $is_updated ) {
-			$import_process_option['updated'][ $type ] ++;
+			$import_process_option['skipped'][ $type ] ++;
 		}
-		custom_log( $import_process_option );
+		//custom_log( $import_process_option );
 		update_option( 'stm_cie_import_process_option', $import_process_option );
 		update_option( 'stm_cie_import_materials', $import_materials );
 	}
