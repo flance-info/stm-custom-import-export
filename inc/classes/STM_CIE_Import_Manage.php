@@ -114,81 +114,67 @@ class STM_CIE_Import_Manage
         wp_send_json($response);
     }
 
-    public function item_handler($item = [])
-    {
+	public function item_handler( $item = [] ) {
 
 
-        if( ! isset( $item['type'] ) || empty( $item['type'] ) ) return;
-
-        global $wpdb;
-
-        $import_process_option = get_option('stm_cie_import_process_option', $this->statuses_default);
-        $import_materials = get_option('stm_cie_import_materials', []);
-
-        $type = $item['type'];
-
-        $is_skipped = false;
-        $is_created = false;
-
-        if($item['skip_for_names'] && !empty($item['post_title'])) {
-            $exist_id = $wpdb->get_var( "SELECT ID FROM $wpdb->posts WHERE post_title = '" . $item['post_title'] . "'" );
-            if($exist_id) {
-                $is_skipped = true;
-            }
-        }
-
-        $inserted_post_id = $this->import_post($item);
-
-        if( ! is_wp_error( $inserted_post_id ) ) {
-            $old_id = $item['ID'];
-            $this->materials[$old_id] = $inserted_post_id;
-            $import_materials[$old_id] = $inserted_post_id;
-
-            if( isset( $item['meta'] ) && ! empty( $item['meta'] ) ) {
-                $this->import_postmeta($inserted_post_id, $item['meta']);
-            }
-            
-            $is_created = true;
-
-            if($type == 'courses') {
-                if ( isset( $item['terms'] ) && ! empty( $item['terms'] ) ) {
-                    $this->import_terms($inserted_post_id, $item['terms']);
-                }
-                $this->import_attachment($inserted_post_id, $item['image_src']);
-                $this->import_sections($inserted_post_id, $item['sections']);
-            } elseif($type == 'bundles') {
-                $stm_lms_bundle_ids = [];
-                $new_ids = [];
-                if(isset($item['meta']['stm_lms_bundle_ids']) && !empty($item['meta']['stm_lms_bundle_ids'])) {
-                    $stm_lms_bundle_ids = $item['meta']['stm_lms_bundle_ids'];
-                }
-
-                $this->import_postmeta($inserted_post_id, $item['meta']);
-
-                $this->import_attachment($inserted_post_id, $item['image_src']);
-
-                if(count($stm_lms_bundle_ids)) {
-                    foreach ($stm_lms_bundle_ids as $id) {
-                        $new_ids[] = $this->materials[$id];
-                    }
-                }
-
-                update_post_meta($inserted_post_id, 'stm_lms_bundle_ids', $new_ids);
-            }
-        } else {
-            $is_skipped = true;
-        }
-
-        if($is_skipped) {
-            $import_process_option['skipped'][$type]++;
-        }
-        if($is_created) {
-            $import_process_option['created'][$type]++;
-        }
-custom_log($import_process_option );
-        update_option( 'stm_cie_import_process_option', $import_process_option );
-        update_option('stm_cie_import_materials', $import_materials);
-    }
+		if ( ! isset( $item['type'] ) || empty( $item['type'] ) ) {
+			return;
+		}
+		global $wpdb;
+		$import_process_option = get_option( 'stm_cie_import_process_option', $this->statuses_default );
+		$import_materials      = get_option( 'stm_cie_import_materials', [] );
+		$type = $item['type'];
+		$is_skipped = false;
+		$is_created = false;
+		if ( $item['skip_for_names'] && ! empty( $item['post_title'] ) ) {
+			$exist_id = $wpdb->get_var( "SELECT ID FROM $wpdb->posts WHERE post_title = '" . $item['post_title'] . "'" );
+			if ( $exist_id ) {
+				$is_skipped = true;
+			}
+		}
+		$inserted_post_id = $this->import_post( $item );
+		if ( ! is_wp_error( $inserted_post_id ) ) {
+			$old_id                      = $item['ID'];
+			$this->materials[ $old_id ]  = $inserted_post_id;
+			$import_materials[ $old_id ] = $inserted_post_id;
+			if ( isset( $item['meta'] ) && ! empty( $item['meta'] ) ) {
+				$this->import_postmeta( $inserted_post_id, $item['meta'] );
+			}
+			$is_created = true;
+			if ( $type == 'courses' ) {
+				if ( isset( $item['terms'] ) && ! empty( $item['terms'] ) ) {
+					$this->import_terms( $inserted_post_id, $item['terms'] );
+				}
+				$this->import_attachment( $inserted_post_id, $item['image_src'] );
+				$this->import_sections( $inserted_post_id, $item['sections'] );
+			} elseif ( $type == 'bundles' ) {
+				$stm_lms_bundle_ids = [];
+				$new_ids            = [];
+				if ( isset( $item['meta']['stm_lms_bundle_ids'] ) && ! empty( $item['meta']['stm_lms_bundle_ids'] ) ) {
+					$stm_lms_bundle_ids = $item['meta']['stm_lms_bundle_ids'];
+				}
+				$this->import_postmeta( $inserted_post_id, $item['meta'] );
+				$this->import_attachment( $inserted_post_id, $item['image_src'] );
+				if ( count( $stm_lms_bundle_ids ) ) {
+					foreach ( $stm_lms_bundle_ids as $id ) {
+						$new_ids[] = $this->materials[ $id ];
+					}
+				}
+				update_post_meta( $inserted_post_id, 'stm_lms_bundle_ids', $new_ids );
+			}
+		} else {
+			$is_skipped = true;
+		}
+		if ( $is_skipped ) {
+			$import_process_option['skipped'][ $type ] ++;
+		}
+		if ( $is_created ) {
+			$import_process_option['created'][ $type ] ++;
+		}
+		custom_log( $import_process_option );
+		update_option( 'stm_cie_import_process_option', $import_process_option );
+		update_option( 'stm_cie_import_materials', $import_materials );
+	}
 
     public function import_handler($data = [], $args = [])
     {
